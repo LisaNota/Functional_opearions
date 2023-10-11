@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# In[12]:
+
+
+from functools import reduce
+
+
 # ## 1. Вычисление статистики успеваемости студентов
 
-# In[64]:
+# In[3]:
 
 
 students = [
@@ -19,18 +25,14 @@ students = [
 
 # Отфильтровать студентов определенного возраста.
 
-# In[65]:
+# In[10]:
 
 
 def students_by_age(students, age):
-    sort = []
-    for student in students:
-        if student["age"] == age:
-            sort.append(student)
-    return sort
+    return list(filter(lambda student: student['age'] == age, students))
 
 
-# In[106]:
+# In[11]:
 
 
 students_by_age(students, 20)
@@ -41,29 +43,19 @@ students_by_age(students, 20)
 # Вычислить средний балл для каждого студента и общий средний
 # балл по всем студентам.
 
-# In[75]:
+# In[28]:
 
 
 def avg_grade(student):
-    summ = 0
-    for grade in student["grades"]:
-        summ += int(grade)
-    l = len(student["grades"])
-    if l == 0:
-        return 0
-    return summ/len(student["grades"])
+    return sum(student["grades"]) / len(student["grades"])
 
 def all_avg_grade(students):
-    total = 0
-    for student in students:
-        total += avg_grade(student)
-    l = len(students)
-    if l == 0:
-        return 0
-    return total / len(students)
+    total_num_grades = sum(map(lambda student: len(student['grades']), students))
+    total_grades_sum = reduce(lambda acc, student: acc + sum(student['grades']), students, 0)
+    return total_grades_sum / total_num_grades
 
 
-# In[104]:
+# In[29]:
 
 
 print(avg_grade(students[0]))
@@ -74,24 +66,16 @@ print(all_avg_grade(students))
 
 # Найти студента (или студентов) с самым высоким средним баллом.
 
-# In[72]:
+# In[53]:
 
 
 def highest_avg_grade(students):
-    highest = -1
-    top = []
-    for student in students:
-        avg = avg_grade(student)
-        if avg > highest:
-            top = []
-            highest = avg
-            top.append(student)
-        elif avg == highest:
-            top.append(student)
-    return top
+    highest_avg = max(map(lambda student: avg_grade(student), students))
+    highest_avg_students = filter(lambda student: avg_grade(student) == highest_avg, students)
+    return list(highest_avg_students)
 
 
-# In[105]:
+# In[32]:
 
 
 highest_avg_grade(students)
@@ -99,7 +83,7 @@ highest_avg_grade(students)
 
 # ## 2. Расчет общей суммы расходов для пользователей с заданными критериями
 
-# In[82]:
+# In[33]:
 
 
 users = [
@@ -113,51 +97,46 @@ users = [
 
 # #### а) Отфильтровать пользователей по заданным критериям
 
-# In[101]:
+# In[34]:
 
 
-def users_by_crit(users, crit):
-    sort = []
-    for user in users:
-        if all(user.get(key) == value for key, value in crit.items()):
-            sort.append(user)
-    return sort
+def filter_users(users, criteria):
+    return list(filter(criteria, users))
 
 
-# In[102]:
+# In[35]:
 
 
-users_by_crit(users, {"name": "Alice"})
+filtered_users = filter_users(users, lambda user: sum(user['expenses']) > 300)
+filtered_users
 
 
 # #### б) Для каждого пользователя рассчитать общую сумму его расходов
 
-# In[108]:
+# In[38]:
 
 
 def total_exp_user(user):
-    return sum(user["expenses"])
+    return {"name": user["name"], "total_expenses": sum(user["expenses"])}
+users_total_expenses = list(map(total_exp_user, users))
 
 
-# In[109]:
+# In[39]:
 
 
-total_exp_user(users[0])
+users_total_expenses
 
 
 # #### в) Получить общую сумму расходов всех отфильтрованных пользователей
 
-# In[112]:
+# In[40]:
 
 
-def total_exp_users(users):
-    total = 0
-    for user in users:
-        total += total_exp_user(user)
-    return total
+def total_exp_users(filtered_users):
+    return reduce(lambda acc, user: acc + sum(user['expenses']), filtered_users, 0)
 
 
-# In[113]:
+# In[41]:
 
 
 total_exp_users(users)
@@ -165,7 +144,7 @@ total_exp_users(users)
 
 # ##  3. Работа с большой базой данных заказов и клиентов
 
-# In[125]:
+# In[44]:
 
 
 orders = [
@@ -180,18 +159,14 @@ orders = [
 
 # #### а) Фильтрация заказов
 
-# In[130]:
+# In[45]:
 
 
 def orders_by_id(orders, customer_id):
-    o = []
-    for order in orders:
-        if order["customer_id"] == customer_id:
-            o.append(order)
-    return o
+    return list(filter(lambda order: order['customer_id'] == customer_id, orders))
 
 
-# In[131]:
+# In[46]:
 
 
 orders_by_id(orders, 101)
@@ -199,14 +174,14 @@ orders_by_id(orders, 101)
 
 # #### б) Подсчет суммы заказов
 
-# In[132]:
+# In[47]:
 
 
 def total_sum(orders):
-    return sum(order["amount"] for order in orders)
+    return reduce(lambda acc, order: acc + order['amount'], orders, 0)
 
 
-# In[133]:
+# In[48]:
 
 
 total_sum(orders)
@@ -214,17 +189,14 @@ total_sum(orders)
 
 # #### в) Подсчет средней стоимости заказов
 
-# In[134]:
+# In[51]:
 
 
 def avg_sum(orders):
-    l = len(orders)
-    if l == 0:
-        return 0
     return total_sum(orders) / len(orders)
 
 
-# In[135]:
+# In[52]:
 
 
 avg_sum(orders)
